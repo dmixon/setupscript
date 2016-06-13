@@ -1,0 +1,178 @@
+#!/bin/bash
+
+echohelp ()
+{
+  echo -e "An installation script assisting with first-time box setup. Each of the below options (exluding help) will install a different package."
+  echo -e "Available distros: Ubuntu 16.04, CentOS 7, Fedora 23"
+  echo -e "Available packages: Ansible, Dropbox, Git, Google-Chrome, Hangups, Irsii, KVM, Liferea, Messenger for Desktop, Pianobar, Sky, Slack, Spotify, Vim"
+  echo -e "Usage:"
+  echo -e "-a   install Ansible, a configuration manager"
+  echo -e "-A   install all available packages"
+  echo -e "-d   install Dropbox, a nautilus client for the cloud storage platform"
+  echo -e "-g   install Google Chrome, a web browser"
+  echo -e "-G   install Git, a code versioning tool"
+  echo -e "-h   print this help screen and exit"
+  echo -e "-H   install Hangups, a text-based Google Hangouts client"
+  echo -e "-i   install Irssi, an IRC client"
+  echo -e "-k   install KVM, a virtual machine manager" 
+  echo -e "-l   install Liferea, an RSS reader/Podcast player"
+  echo -e "-m   install Messenger for Desktop (a Facebook Messenger client)"
+  echo -e "-p   install Pianobar, a command-line, ad-free Pandora client"
+  echo -e "-s   install Sky (a Linux Skype equivalent)"
+  echo -e "-S   install Slack, a \"professional\" chat client"
+  echo -e "-t   install Spotify, a music client"
+  echo -e "-v   install Vim, a simple yet powerful text editor"  
+}
+
+yuminstall ()
+{
+  sudo yum install -qy $1
+}
+
+aptinstall ()
+{
+  sudo apt-get install -qy $1
+}
+
+if ! grep -q Ubuntu /etc/os-release;
+then
+  if [ $(grep -q CentOS /etc/os-release) ]; then
+    while getopts ":aAgGhilmpsStv" opt; do
+        case $opt in
+        h)
+          echohelp 
+          ;;
+        a) 
+          sudo rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+          sudo yum -qy update
+          yuminstall ansible
+          ;;
+        g)
+          wget -q wget https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm
+          yuminstall *google*
+          rm -f *google*
+          ;;
+        G) 
+          yuminstall git-all
+          ;;
+        H)
+          sudo rpm -iUvh http://dl.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-5.noarch.rpm
+          sudo yum -qy update
+          yuminstall python3-ip
+          sudo pip3 install hangups
+          ;;
+        i)
+          yuminstall irssi
+          ;;
+        l)
+          yuminstall liferea
+          ;;
+        v)
+          yuminstall vim
+          ;;          
+        \?)
+          echo -e "Invalid option: -$OPTARG"
+          ;;
+        esac
+    done
+  else
+    while getopts ":aAhvsc" opt; do
+        case $opt in
+        h)
+          echohelp
+          ;;
+        \?)
+          echo -e "Invalid option: -$OPTARG"
+          ;;
+        esac
+    done
+  fi
+else
+  while getopts ":aAdgGhHiiklmpsStv" opt; do
+        case $opt in
+        h)
+          echohelp
+          ;;
+        a)
+          sudo apt-get install -qy ansible
+          ;;
+        A)
+          sudo apt-get install -qy ansible python3-pip pianobar irssi liferea vim
+          sudo pip3 install hangups
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 
+          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+          sudo apt-get -qy update
+          aptinstall google-chrome-stable
+          wget -q https://github.com/Aluxian/Facebook-Messenger-Desktop/releases/download/v1.4.3/Messenger_linux64.deb
+          sudo dpkg -i *Messenger*
+          sudo rm -f *Messenger*
+          wget -q https://tel.red/linux.php?f=sky_2.1.0.8-2ubu16%2Bxenial_amd64.deb
+          sudo dpkg -i *sky*
+          sudo rm -f *sky*
+          wget -q https://downloads.slack-edge.com/linux_releases/slack-desktop-2.0.6-amd64.deb
+          sudo dpkg -i *slack* 
+          sudo rm -f *slack*
+          sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys BBEBDCB318AD50EC6865090613B00F1FD2C19886
+          echo deb http://repository.spotify.com stable non-free | sudo tee /etc/apt/sources.list.d/spotify.list
+          sudo apt-get -qy update 
+          aptinstall spotify-client
+          ;;
+        d)
+         aptinstall nautilus-dropbox
+         ;;
+        g)
+         wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add - 
+         sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
+         sudo apt-get -qy update
+         aptinstall google-chrome-stable
+         ;;
+        G)
+         aptinstall git-all
+         ;;
+        H)
+         aptinstall python3-pip
+         sudo pip3 install hangups
+         ;;
+        i)
+         aptinstall irssi
+         ;;
+        k)
+         sudo apt-get install -qy qemu-kvm libvirt-bin ubuntu-vm-builder bridge-utils virt-manager
+         ;;
+        l)
+         aptinstall liferea
+         ;;
+        m)
+         wget -q https://github.com/Aluxian/Facebook-Messenger-Desktop/releases/download/v1.4.3/Messenger_linux64.deb
+         sudo dpkg -i *Messenger*
+         sudo rm -f *Messenger*
+         ;;
+        p)
+         aptinstall pianobar
+         ;; 
+        s)
+         wget -q https://tel.red/linux.php?f=sky_2.1.0.8-2ubu16%2Bxenial_amd64.deb
+         sudo dpkg -i *sky*
+         sudo rm -f *sky*
+         ;;
+        S)
+         wget -q https://downloads.slack-edge.com/linux_releases/slack-desktop-2.0.6-amd64.deb
+         sudo dpkg -i *slack* 
+         sudo rm -f *slack*
+         ;;
+        t)
+         sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys BBEBDCB318AD50EC6865090613B00F1FD2C19886
+         echo deb http://repository.spotify.com stable non-free | sudo tee /etc/apt/sources.list.d/spotify.list
+         sudo apt-get -qy update 
+         aptinstall spotify-client
+         ;; 
+        v)
+         aptinstall vim
+         ;;
+        \?)
+          echo -e "Invalid option: -$OPTARG"
+          ;;
+        esac
+    done
+fi
+
